@@ -615,7 +615,7 @@ def calculate_nearest_neighbor_distances_optimized(df, track_ids, frame_range=(0
             nearest_distance = pairwise_distances[idx, min_distance_idx]
             nearest_track = frame_data['track'].values[min_distance_idx]
 
-            # Append results to lists for each track
+            # appending results to lists for each track
             nnd_distances[f'nnd_{track_id}'].append(nearest_distance)
             nnd_tracks[f'nn_of_{track_id}'].append(nearest_track)
 
