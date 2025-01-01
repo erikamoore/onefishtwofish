@@ -1,0 +1,392 @@
+---
+title: "total_distance_visuals"
+output: html_document
+date: "2024-12-01"
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+library(ggplot2)
+library(ggsignif)
+library(ggridges)
+library(ggbeeswarm)
+library(lme4)
+library(performance)
+library(effectsize)
+
+```
+
+
+
+```{r loading}
+
+distance_data <- read.csv("total_dists_with_sizes_.csv")
+
+# group_size becomes a factor for plotting
+distance_data$group_size <- as.factor(distance_data$group_size)
+head(distance_data)
+
+distance_data <- distance_data %>%
+  group_by(group_id) %>%
+  mutate(mean_size = mean(estimated_size),
+         relative_size_mean = (estimated_size / mean_size) * 100) %>% # calc as percentage of the mean
+  ungroup() %>%
+  select(-mean_size) # remove mean_size if only relative sizes are needed
+
+# view updated data frame
+print(distance_data)
+
+```
+
+
+
+```{r boxplotting}
+
+# not included in thesis
+
+# custom color palette for group sizes
+custom_palette <- c("#b2e2e2", "#C8E569", "#b2abd2", "#fdb863", "#e66101", "#66c2a5", "#3288bd", "#fee08b")
+
+# boxplot of total distance traveled by group size with some jitter
+ggplot(distance_data, aes(x = group_size, y = total_distance, fill = group_size)) +
+  geom_boxplot(width = 0.65, alpha = 0.7, color = "black", outlier.shape = NA) +
+  geom_jitter(width = 0.2, size = 0.5, color = "#3288bd", alpha = 1) +  # Add jitter for individual points
+  scale_fill_manual(values = custom_palette, name = "Group Size") +
+  labs(
+    title = "Distribution of Total Distance Traveled by Group Size",
+    x = "Group Size",
+    y = "Total Distance Traveled (pixels)"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "right",
+    plot.title = element_text(size = 14, margin = margin(b = 20, t = 10))
+  )
+
+```
+```{r sizes}
+
+# same as above but includes relative body sizes
+# body size does not seem to be that important
+ggplot(distance_data, aes(x = as.factor(group_size), y = total_distance, fill = as.factor(group_size))) +
+  geom_boxplot(width = 0.65, alpha = 0.7, color = "black", outlier.shape = NA) +
+  geom_jitter(
+    aes(size = relative_size_mean),  # Size jittered points by estimated_size
+    width = 0.2,  # Slightly reduce jitter width
+    color = "#3288bd", alpha = 0.3  # Reduced alpha for subtlety
+  ) +
+  scale_fill_manual(values = custom_palette, name = "Group Size") +
+  scale_size_continuous(name = "Relative Body Size in Group", range = c(0.2, 3)) +  # Adjust size range for visibility
+  labs(
+    title = "Distribution of Total Distance Traveled by Group Size",
+    x = "Group Size",
+    y = "Total Distance Traveled (pixels)"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "right",
+    plot.title = element_text(size = 14, margin = margin(b = 20, t = 10))
+  )
+
+```
+
+```{r violin}
+# Violin plot of total distance by group size
+ggplot(distance_data, aes(x = group_size, y = total_distance, fill = group_size)) +
+  geom_violin(trim = FALSE, alpha = 0.5) +
+  geom_boxplot(width = 0.1, alpha = 0.7, color = "black", outlier.shape = NA) +
+  scale_fill_manual(values = custom_palette, name = "Group Size") +
+  labs(
+    title = "Distribution of Total Distance Traveled by Group Size",
+    x = "Group Size",
+    y = "Total Distance Traveled (pixels)"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "right",
+        axis.title = element_text(size = 10),
+
+        plot.title = element_text(size = 14, margin = margin(b = 20, t = 10))
+)
+```
+
+```{r f2}
+# not used in thesis
+# same plot as above just with significance marked
+
+# making sure group_size is treated as a factor and ordered correctly
+distance_data$group_size <- factor(distance_data$group_size, levels = c("1", "2", "3", "4"))
+
+ggplot(distance_data, aes(x = group_size, y = total_distance, fill = group_size)) +
+  geom_violin(trim = FALSE, alpha = 0.5) +
+  geom_boxplot(width = 0.1, alpha = 0.7, color = "black", outlier.shape = NA) +
+  scale_fill_manual(values = custom_palette, name = "Group Size") +
+  labs(
+    title = "Distribution of Total Distance Traveled by Group Size",
+    x = "Group Size",
+    y = "Total Distance Traveled (pixels)"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "right",
+    axis.title = element_text(size = 10),
+    plot.title = element_text(size = 14, margin = margin(b = 20, t = 10))
+  ) +
+  geom_signif(
+    comparisons = list(
+      c("1", "2"),
+      c("1", "3"),
+      c("1", "4"),
+      c("2", "3"),
+      c("2", "4"),
+      c("3", "4")
+    ),
+    annotations = c("ns", "**", "***", "***", "***", "***"),
+    textsize = 3.5,       
+    vjust = 0.2,          
+    tip_length = 0.01,    
+    color = "gray40",     
+    y_position = c(115000, 135000, 155000, 175000, 195000, 215000) # non-overlapping
+  )
+
+
+```
+
+
+```{r ridge}
+
+# from the appendix
+# reversing the levels of group_size in our data to change the order in the plot
+distance_data$group_size <- factor(distance_data$group_size, levels = rev(levels(distance_data$group_size)))
+
+custom_palette_r <- c("#fdb863","#b2abd2", "#C8E569", "#b2e2e2")
+          
+# creating the ridgeline plot
+ggplot(distance_data, aes(x = total_distance, y = group_size, fill = group_size)) +
+  geom_density_ridges(alpha = 0.7, scale = 1, jitter_points=TRUE) +  # Adjust scale for overlap
+  scale_fill_manual(values = custom_palette_r, name = "Group Size", guide = guide_legend(reverse = TRUE)) +  # Custom color palette
+  labs(
+    title = "Ridgeline Plot of Total Distance Traveled by Group Size",
+    x = "Total Distance Traveled (pixels)",
+    y = "Group Size"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "right",
+    axis.title = element_text(size = 10),
+    plot.title = element_text(size = 14, margin = margin(b = 40, t = 10))
+  )
+
+
+```
+
+
+
+
+
+
+```{r ridge2}
+
+# an extra overlapping density plot for total distance traveled
+custom_palette <- c("#b2e2e2", "#C8E569", "#b2abd2", "#fdb863", "#e66101", "#66c2a5", "#3288bd", "#fee08b")
+ggplot(distance_data, aes(x = total_distance, fill = group_size)) +
+  geom_density(
+    alpha = 0.6,
+    position = "identity",
+    color = "black"
+  ) +
+  scale_fill_manual(values = custom_palette, name = "Group Size") +
+  labs(
+    title = "Total Distance Traveled (Overlapping Density)",
+    x = "Total Distance Traveled (pixels)",
+    y = "Density"
+  ) +
+  xlim(0, max(distance_data$total_distance, na.rm = TRUE) * 1.4) +  # Extend x-axis limit
+  ylim(0, 0.000025) +  # Allow ggplot to auto-adjust y-axis limits with some additional space
+  theme_minimal() +
+  theme(
+    legend.position = "right",
+    axis.title = element_text(size = 10),
+    plot.title = element_text(size = 14,margin = margin(b = 40, t = 10)),
+
+  )
+
+
+```
+
+```{r bees}
+
+# also not used in thesis
+# just another way to look at it
+
+ggplot(distance_data, aes(x = group_size, y = total_distance, color = group_size, size = estimated_size)) +
+  geom_beeswarm(alpha = 0.8) +
+  scale_color_manual(values = custom_palette, name = "Group Size") +
+  scale_size_continuous(name = "Estimated Size") +  
+  labs(
+    title = "Beeswarm Plot of Total Distance Traveled by Group Size",
+    x = "Group Size",
+    y = "Total Distance Traveled (pixels)"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "right",
+    plot.title = element_text(size = 14, margin = margin(b = 20, t = 10))
+  )
+
+```
+
+
+```{r tukey_stats}
+# are differences in total distances traveled significant by group size? 
+distance_data$group_size <- as.factor(distance_data$group_size)
+
+# running ANOVA
+anova_model <- aov(total_distance ~ group_size, data = distance_data)
+summary(anova_model)
+
+# if ANOVA is significant, we perform Tukey's HSD
+tukey_results <- TukeyHSD(anova_model)
+print(tukey_results)
+
+
+
+```
+```{r effectsize}
+# again, just making sure group size is treated as a factor
+distance_data$group_size <- as.factor(distance_data$group_size)
+
+# running ANOVA
+anova_model <- aov(total_distance ~ group_size, data = distance_data)
+
+# calc eta-squared
+eta_squared_results <- eta_squared(anova_model, partial = FALSE)  # Full eta-squared
+print(eta_squared_results)
+
+```
+
+
+```{r ICC_variation}
+all_dists <- read.csv("total_dists_with_sizes_.csv")
+
+
+# converting group_size and group_id to factors
+all_dists$group_size <- as.factor(all_dists$group_size)
+all_dists$group_id <- as.factor(all_dists$group_id)
+
+# filtering for group_size = 2
+group_size_2 <- subset(all_dists, group_size == 2)
+
+# fitting a mixed-effects model for group_id as a random effect
+model_2 <- lmer(total_distance ~ (1 | group_id), data = group_size_2)
+
+# calculating ICC for group_size = 2
+icc_value_2 <- icc(model_2)
+print("ICC for group_size = 2:")
+print(icc_value_2)
+
+
+
+# filtering for group_size = 3
+group_size_3 <- subset(all_dists, group_size == 3)
+
+# fitting a mixed-effects model for group_id as a random effect
+model_3 <- lmer(total_distance ~ (1 | group_id), data = group_size_3)
+
+# calculating ICC for group_size = 3
+icc_value_3 <- icc(model_3)
+print("ICC for group_size = 3")
+print(icc_value_3)
+
+
+# filtering for group_size = 4
+group_size_4 <- subset(all_dists, group_size == 4)
+
+# and fitting a mixed-effects model for group_id as a random effect
+model_4 <- lmer(total_distance ~ (1 | group_id), data = group_size_4)
+
+# calc ICC for group_size = 4
+icc_value_4 <- icc(model_4)
+print("ICC for group_size = 4")
+print(icc_value_4)
+```
+
+
+```{r betweenwithin2}
+
+
+# filter data for group_size = 2
+distance_data_2 <- subset(distance_data, group_size == 2)
+
+# custom plot with color coding by group_id for group_size = 2
+ggplot(distance_data_2, aes(x = group_id, y = total_distance, color = factor(group_id), size = estimated_size)) +
+  geom_beeswarm(alpha = 0.8) +
+  scale_color_manual(values = custom_palette, name = "Group ID") +
+  scale_size_continuous(name = "Fish Body Size") +
+  labs(
+    title = "Beeswarm Plot of Total Distance Traveled by Group ID (Group Size = 2)",
+    x = "Group ID",
+    y = "Total Distance Traveled (pixels)"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "right",
+    plot.title = element_text(size = 14, margin = margin(b = 20, t = 10))
+  )
+
+```
+
+```{r betweenwithin3}
+
+
+# filter data for group_size = 3
+distance_data_3 <- subset(distance_data, group_size == 3)
+
+# custom plot with color coding by group_id for group_size = 3
+ggplot(distance_data_3, aes(x = group_id, y = total_distance, color = factor(group_id), size = estimated_size)) +
+  geom_beeswarm(alpha = 0.8) +
+  scale_color_manual(values = custom_palette, name = "Group ID") +
+  scale_size_continuous(name = "Fish Body Size") +
+  labs(
+    title = "Beeswarm Plot of Total Distance Traveled by Group ID (Group Size = 3)",
+    x = "Group ID",
+    y = "Total Distance Traveled (pixels)"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "right",
+    plot.title = element_text(size = 14, margin = margin(b = 20, t = 10))
+  )
+
+```
+
+```{r betweenwithin4}
+
+# included this one in thesis (slightly altered legend)
+# filter data for group_size = 4
+distance_data_4 <- subset(distance_data, group_size == 4)
+
+# custom plot with color coding by group_id for group_size = 4
+ggplot(distance_data_4, aes(x = group_id, y = total_distance, color = factor(group_id), size = estimated_size)) +
+  geom_beeswarm(alpha = 0.8) +
+  scale_color_manual(values = custom_palette, name = "Group ID") +
+  scale_size_continuous(name = "Fish Body Size") +
+  labs(
+    title = "Beeswarm Plot of Total Distance Traveled by Group ID (Group Size = 4)",
+    x = "Group ID",
+    y = "Total Distance Traveled (pixels)"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "right",
+    plot.title = element_text(size = 14, margin = margin(b = 20, t = 10))
+  )
+
+```
+
+
+
+
