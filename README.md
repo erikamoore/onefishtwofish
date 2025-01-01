@@ -18,7 +18,7 @@ This repo contains code used for post processing + analysis in the SLEAP fish tr
 
 Recommendations:
 1. Run **`fish_utils.py`** and **`visuals.py`** for the core analysis + plotting functions.
-2. See **`find_center_demo.ipynb`** and **`total_dists.ipynb`** to follow analysis pipeline.
+2. See **`find_center_demo.ipynb`** and **`total_dists.ipynb`** for some analysis examples.
 3. Generate visualizations with **`visuals_demo.ipynb`** and **`visuals_demo_2.Rmd`** (also has HTML).
 
 
