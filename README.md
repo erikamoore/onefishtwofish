@@ -1,10 +1,18 @@
 # One Fish, Two Fish
 further explorations will take place soon-ish... :)
 
+This repo contains code used for post processing + analysis in the SLEAP fish tracking project. Feel free to [read my thesis](docs/moore_erika_thesis.pdf) or [view the poster](docs/moore_erika_poster.pdf) to learn more about it.
 
-This repo contains code used for post processing + analysis in the SLEAP fish tracking project:
+<p align="center">
+  <img src="docs/fish_gif.gif" alt="Demo" width="400">
+</p>
 
-* **``models``**: folder with the `centroid` and `centered-instance` models used for tracking (not required for running analysis)
+
+
+
+
+
+* **``models``**: folder with the SLEAP `centroid` and `centered-instance` models used for tracking (not required for running analysis)
 * **``allcsvs``**: folder of SLEAP csv output for all groups of tracked fish (each file labeled by `group_id`)
 * **`constants.py`**: constants used throughout the project
 * **`erikas_1min.csv`** & **`erikas_t2_4s.csv`**: sample datasets for testing code
@@ -17,6 +25,7 @@ This repo contains code used for post processing + analysis in the SLEAP fish tr
 * **`visuals.py`** script for automating visualizations in `visuals_demo.ipynb`
 
 
+
 Recommendations:
 1. Run **`fish_utils.py`** and **`visuals.py`** for the core analysis + plotting functions.
 2. See **`find_center_demo.ipynb`** and **`total_dists.ipynb`** for some analysis examples.
@@ -25,4 +34,12 @@ Recommendations:
 
 ---
 
+
+
 **Repository URL**: [https://github.com/erikamoore/onefishtwofish.git](https://github.com/erikamoore/onefishtwofish.git)
+
+
+
+<p align="center">
+  <img src="docs/fish_poster.png" alt="Thesis Poster" style="max-width: 100%; height: auto;">
+</p>
