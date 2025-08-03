@@ -4,7 +4,7 @@ further explorations will take place soon-ish... :)
 This repo contains code used for post processing + analysis in the SLEAP fish tracking project. Feel free to [read my thesis](docs/moore_erika_thesis.pdf) or [view the poster](docs/moore_erika_poster.pdf) to learn more about it.
 
 <p align="center">
-  <img src="docs/fish_gif.gif" alt="Demo" width="400">
+  <img src="docs/fish_gif.gif" alt="A gif of 4 fish being tracked with SLEAP" width="400">
 </p>
 
 
